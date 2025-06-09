@@ -6,60 +6,103 @@ import os
 import signal
 import sys
 
-logging.basicConfig(level=logging.INFO)
+class SensorConsumer:
+    """
+    A class responsible for consuming sensor data messages from a Kafka topic.
 
-#environment variables
-KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'sensores')
-KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
-KAFKA_GROUP_ID = os.getenv('KAFKA_GROUP_ID', 'sensor-group')
+    Attributes:
+        topic (str): The Kafka topic to consume messages from.
+        bootstrap_servers (str): The Kafka server address.
+        group_id (str): The consumer group ID.
+        writer (DataWriter): The instance responsible for writing data to the database.
+        shutdown_flag (bool): Flag to indicate when the consumer should stop.
+        consumer (KafkaConsumer): The Kafka consumer instance.
+    """
 
-shutdown_flag = False
+    def __init__(self, topic, bootstrap_servers, group_id, writer):
+        """
+        Initializes the SensorConsumer with the specified topic, Kafka server, group ID, and writer.
 
-def handle_shutdown_signal(signum, frame):
-    global shutdown_flag
-    logging.info("Shutdown signal received. Closing consumer...")
-    shutdown_flag = True
+        Args:
+            topic (str): The Kafka topic to consume messages from.
+            bootstrap_servers (str): The Kafka server address.
+            group_id (str): The consumer group ID.
+            writer (DataWriter): The instance responsible for writing data to the database.
+        """
+        self.topic = topic
+        self.bootstrap_servers = bootstrap_servers
+        self.group_id = group_id
+        self.writer = writer
+        self.shutdown_flag = False
 
-#signal handlers
-signal.signal(signal.SIGINT, handle_shutdown_signal)
-signal.signal(signal.SIGTERM, handle_shutdown_signal)
+        self.consumer = KafkaConsumer(
+            self.topic,
+            bootstrap_servers=self.bootstrap_servers,
+            auto_offset_reset='earliest',
+            group_id=self.group_id,
+            value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+        )
 
-consumer = KafkaConsumer(
-    KAFKA_TOPIC,
-    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-    auto_offset_reset='earliest',
-    group_id=KAFKA_GROUP_ID,
-    value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-)
+    def handle_shutdown_signal(self, signum, frame):
+        """
+        Handles shutdown signals to gracefully stop the consumer.
 
-writer = DataWriter()
+        Args:
+            signum (int): The signal number.
+            frame (FrameType): The current stack frame.
+        """
+        logging.info("Shutdown signal received. Closing consumer...")
+        self.shutdown_flag = True
 
-def handle_lost_message(message):
-    """Handle lost Kafka messages by logging or storing them in a dead-letter queue."""
-    try:
-        logging.error(f"Lost message: {message}")
+    def handle_lost_message(self, message):
+        """
+        Handles lost Kafka messages by logging or storing them in a dead-letter queue.
 
-        with open("lost_messages.log", "a") as f:
-            f.write(json.dumps(message) + "\n")
-    except Exception as e:
-        logging.error(f"Failed to handle lost message: {e}")
-
-try:
-    for message in consumer:
-        if shutdown_flag:
-            break
-
-        if not message or not message.value:
-            logging.warning("Received empty or invalid Kafka message, skipping.")
-            continue
-
+        Args:
+            message (dict): The lost message.
+        """
         try:
-            writer.process(message.value)
+            logging.error(f"Lost message: {message}")
+            with open("lost_messages.log", "a") as f:
+                f.write(json.dumps(message) + "\n")
         except Exception as e:
-            logging.error(f"Error processing message: {e}")
-            handle_lost_message(message.value)
-except Exception as e:
-    logging.error(f"Unexpected error in consumer: {e}")
-finally:
-    consumer.close()
-    logging.info("Kafka consumer closed.")
+            logging.error(f"Failed to handle lost message: {e}")
+
+    def consume_messages(self):
+        """
+        Consumes messages from the Kafka topic and processes them using the writer.
+        """
+        try:
+            for message in self.consumer:
+                if self.shutdown_flag:
+                    break
+
+                if not message or not message.value:
+                    logging.warning("Received empty or invalid Kafka message, skipping.")
+                    continue
+
+                try:
+                    self.writer.process(message.value)
+                except Exception as e:
+                    logging.error(f"Error processing message: {e}")
+                    self.handle_lost_message(message.value)
+        except Exception as e:
+            logging.error(f"Unexpected error in consumer: {e}")
+        finally:
+            self.consumer.close()
+            logging.info("Kafka consumer closed.")
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'sensores')
+    KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
+    KAFKA_GROUP_ID = os.getenv('KAFKA_GROUP_ID', 'sensor-group')
+
+    writer = DataWriter()
+    consumer = SensorConsumer(KAFKA_TOPIC, KAFKA_BOOTSTRAP_SERVERS, KAFKA_GROUP_ID, writer)
+
+    signal.signal(signal.SIGINT, consumer.handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, consumer.handle_shutdown_signal)
+
+    consumer.consume_messages()

@@ -13,6 +13,15 @@ TOPIC = "test-topic"
 TEST_DATA = {"message": "integration-test"}
 
 def wait_for_kafka(timeout=30):
+    """
+    Waits for Kafka to become available within the specified timeout.
+
+    Args:
+        timeout (int): Maximum time to wait for Kafka availability in seconds.
+
+    Raises:
+        pytest.skip: If Kafka is not available within the timeout.
+    """
     start = time.time()
     while time.time() - start < timeout:
         try:
@@ -24,6 +33,11 @@ def wait_for_kafka(timeout=30):
     pytest.skip(f"Kafka not available at {KAFKA_BOOTSTRAP_SERVERS} after {timeout}s")
 
 def create_kafka_topic():
+    """
+    Creates the Kafka topic if it does not already exist.
+
+    Ensures the topic is ready for producing and consuming messages.
+    """
     admin = KafkaAdminClient(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
     topic = NewTopic(name=TOPIC, num_partitions=1, replication_factor=1)
     try:
@@ -35,13 +49,23 @@ def create_kafka_topic():
         admin.close()
 
 def validate_topic_creation():
+    """
+    Validates that the Kafka topic was created successfully.
+
+    Raises:
+        AssertionError: If the topic does not exist.
+    """
     admin = KafkaAdminClient(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
     topics = admin.list_topics()
     assert TOPIC in topics, f"Topic {TOPIC} was not created correctly"
     admin.close()
 
-@pytest.mark.integration
 def test_kafka_produce_consume():
+    """
+    Tests the integration between Kafka producer and consumer.
+
+    Ensures that a message produced to the Kafka topic is successfully consumed.
+    """
     wait_for_kafka()
     create_kafka_topic()
     validate_topic_creation()
