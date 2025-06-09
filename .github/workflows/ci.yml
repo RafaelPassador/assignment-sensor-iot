@@ -37,5 +37,9 @@ jobs:
           pip install -r requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+      - name: Update MongoDB URI
+        run: echo "MONGODB_URI=mongodb://localhost:27017" >> $GITHUB_ENV
+      - name: Update Kafka URI
+        run: echo "KAFKA_BOOTSTRAP_SERVERS=localhost:9092" >> $GITHUB_ENV
       - name: Run Tests
         run: pytest tests
