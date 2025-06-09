@@ -20,15 +20,7 @@ jobs:
           KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
           KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
           ALLOW_PLAINTEXT_LISTENER: yes
-          KAFKA_CFG_PROCESS_ROLES: broker
-          KAFKA_CFG_NODE_ID: 1
-          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-        options: >-
-          --network-alias=kafka
-          --health-cmd="kafka-topics.sh --bootstrap-server localhost:9092 --list"
-          --health-interval=15s
-          --health-timeout=10s
-          --health-retries=15
+        options: --network-alias=kafka
       zookeeper:
         image: bitnami/zookeeper:latest
         ports:
@@ -45,9 +37,5 @@ jobs:
           pip install -r requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
-      - name: Set Environment Variables
-        run: |
-          echo "KAFKA_BOOTSTRAP_SERVERS=localhost:9092" >> $GITHUB_ENV
-          echo "MONGODB_URI=mongodb://localhost:27017" >> $GITHUB_ENV
       - name: Run Tests
         run: pytest tests
