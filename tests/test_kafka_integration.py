@@ -12,7 +12,7 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
 TOPIC = "test-topic"
 TEST_DATA = {"message": "integration-test"}
 
-def wait_for_kafka(timeout=30):
+def wait_for_kafka(timeout=60):
     """
     Waits for Kafka to become available within the specified timeout.
 
@@ -25,11 +25,14 @@ def wait_for_kafka(timeout=30):
     start = time.time()
     while time.time() - start < timeout:
         try:
+            logging.info("Checking Kafka availability...")
             prod = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
             prod.close()
+            logging.info("Kafka is available.")
             return
         except NoBrokersAvailable:
-            time.sleep(1)
+            logging.warning("Kafka not available yet, retrying...")
+            time.sleep(5)
     pytest.skip(f"Kafka not available at {KAFKA_BOOTSTRAP_SERVERS} after {timeout}s")
 
 def create_kafka_topic():
