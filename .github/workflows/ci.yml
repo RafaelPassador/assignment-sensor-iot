@@ -11,6 +11,13 @@ jobs:
         image: mongo
         ports:
           - 27017:27017
+        options: --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'" --health-interval=10s --health-timeout=5s --health-retries=5
+
+      zookeeper:
+        image: bitnami/zookeeper:latest
+        ports:
+          - 2181:2181
+
       kafka:
         image: bitnami/kafka:latest
         ports:
@@ -20,20 +27,24 @@ jobs:
           KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
           KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
           ALLOW_PLAINTEXT_LISTENER: yes
-        options: --network-alias=kafka
-      zookeeper:
-        image: bitnami/zookeeper:latest
-        ports:
-          - 2181:2181
+        options: --network-alias=kafka --health-cmd="kafka-topics.sh --bootstrap-server localhost:9092 --list" --health-interval=10s --health-timeout=5s --health-retries=10
+        depends_on:
+          - zookeeper
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install dependencies
         run: |
           pip install pytest pymongo kafka-python
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
       - name: Run Tests
         run: pytest tests
