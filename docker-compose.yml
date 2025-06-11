@@ -53,6 +53,8 @@ services:
   sensor-producer:
     build: .
     command: python producer/sensor_producer.py
+    ports:
+      - "8000:8000"
     depends_on:
       kafka:
         condition: service_healthy
@@ -60,6 +62,8 @@ services:
   sensor-consumer:
     build: .
     command: python consumer/sensor_consumer.py
+    ports:
+      - "8001:8001"
     depends_on:
       kafka:
         condition: service_healthy

@@ -43,6 +43,7 @@ class SensorProducer:
         self.logger = logging.getLogger(__name__)
         self.message_count = 0
         self.last_minute = time.time()
+        self.messages_in_current_minute = 0
         start_metrics_server(8000)
 
     def validate_sensor_data(self, data):
@@ -101,6 +102,7 @@ class SensorProducer:
                     self.producer.send(self.topic, temperature_data)
                     messages_produced.inc()
                     self.message_count += 1
+                    self.messages_in_current_minute += 1
                     self.logger.info(f"Sent temperature: {temperature_data}")
                 else:
                     producer_failures.inc()
@@ -112,8 +114,8 @@ class SensorProducer:
             # Atualiza métricas por minuto
             current_time = time.time()
             if current_time - self.last_minute >= 60:
-                messages_produced_per_minute.set(self.message_count)
-                self.message_count = 0
+                messages_produced_per_minute.set(self.messages_in_current_minute)
+                self.messages_in_current_minute = 0
                 self.last_minute = current_time
 
             time.sleep(1)

@@ -56,22 +56,21 @@
       "pluginVersion": "7.1.3",
       "pointradius": 2,
       "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
+      "renderer": "flot",      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sensor_messages_produced_per_minute",
+          "expr": "rate(sensor_messages_produced_total[1m]) * 60",
           "interval": "",
-          "legendFormat": "Produzidas",
+          "legendFormat": "Mensagens Produzidas/min",
           "refId": "A"
         },
         {
-          "expr": "sensor_messages_consumed_per_minute",
+          "expr": "rate(sensor_messages_consumed_total[1m]) * 60",
           "interval": "",
-          "legendFormat": "Consumidas",
+          "legendFormat": "Mensagens Consumidas/min",
           "refId": "B"
         }
       ],
@@ -92,14 +91,13 @@
         "name": null,
         "show": true,
         "values": []
-      },
-      "yaxes": [
+      },      "yaxes": [
         {
           "format": "short",
-          "label": null,
+          "label": "Mensagens/min",
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
@@ -154,28 +152,27 @@
       "pluginVersion": "7.1.3",
       "pointradius": 2,
       "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
+      "renderer": "flot",      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sensor_producer_failures_total",
+          "expr": "rate(sensor_producer_failures_total[1m]) * 60",
           "interval": "",
-          "legendFormat": "Falhas Producer",
+          "legendFormat": "Falhas do Producer/min",
           "refId": "A"
         },
         {
-          "expr": "sensor_consumer_failures_total",
+          "expr": "rate(sensor_consumer_failures_total[1m]) * 60",
           "interval": "",
-          "legendFormat": "Falhas Consumer",
+          "legendFormat": "Falhas do Consumer/min",
           "refId": "B"
         },
         {
-          "expr": "sensor_validation_failures_total",
+          "expr": "rate(sensor_validation_failures_total[1m]) * 60",
           "interval": "",
-          "legendFormat": "Falhas Validação",
+          "legendFormat": "Falhas de Validação/min",
           "refId": "C"
         }
       ],
@@ -196,11 +193,10 @@
         "name": null,
         "show": true,
         "values": []
-      },
-      "yaxes": [
+      },      "yaxes": [
         {
           "format": "short",
-          "label": null,
+          "label": "Número de Falhas",
           "logBase": 1,
           "max": null,
           "min": "0",

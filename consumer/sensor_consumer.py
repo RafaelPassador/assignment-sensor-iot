@@ -45,6 +45,7 @@ class SensorConsumer:
         self.writer = writer
         self.shutdown_flag = False
         self.message_count = 0
+        self.messages_in_current_minute = 0
         self.last_minute = time.time()
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
@@ -123,6 +124,7 @@ class SensorConsumer:
                         self.writer.process(message.value)
                         messages_consumed.inc()
                         self.message_count += 1
+                        self.messages_in_current_minute += 1
                     else:
                         validation_failures.inc()
                         self.handle_lost_message(message.value, "Schema validation failed")
@@ -134,8 +136,8 @@ class SensorConsumer:
                 # Atualiza métricas por minuto
                 current_time = time.time()
                 if current_time - self.last_minute >= 60:
-                    messages_consumed_per_minute.set(self.message_count)
-                    self.message_count = 0
+                    messages_consumed_per_minute.set(self.messages_in_current_minute)
+                    self.messages_in_current_minute = 0
                     self.last_minute = current_time
 
         except Exception as e:
