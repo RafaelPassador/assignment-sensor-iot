@@ -1,4 +1,5 @@
-kafka-python
-pymongo
-faker
-pytest
+kafka-python==2.2.11
+pymongo==4.6.1
+faker==37.3.0
+pytest==8.4.0
+jsonschema==4.24.0

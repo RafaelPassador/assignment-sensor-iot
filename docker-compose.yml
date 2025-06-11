@@ -14,6 +14,10 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      # Default retention period of 7 days (168 hours)
+      KAFKA_LOG_RETENTION_HOURS: 168
+      # Default retention size of 1GB
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
       interval: 10s

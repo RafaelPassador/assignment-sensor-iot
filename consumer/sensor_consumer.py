@@ -5,6 +5,8 @@ import logging
 import os
 import signal
 import sys
+from jsonschema import validate, ValidationError
+from schemas.sensor_schema import TEMPERATURE_SENSOR_SCHEMA
 
 class SensorConsumer:
     """
@@ -34,6 +36,8 @@ class SensorConsumer:
         self.group_id = group_id
         self.writer = writer
         self.shutdown_flag = False
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
 
         self.consumer = KafkaConsumer(
             self.topic,
@@ -43,6 +47,23 @@ class SensorConsumer:
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
 
+    def validate_message(self, message):
+        """
+        Validates the message against the sensor schema.
+
+        Args:
+            message (dict): The message to validate.
+
+        Returns:
+            bool: True if validation succeeds, False otherwise.
+        """
+        try:
+            validate(instance=message, schema=TEMPERATURE_SENSOR_SCHEMA)
+            return True
+        except ValidationError as e:
+            self.logger.error(f"Schema validation error: {e}")
+            return False
+
     def handle_shutdown_signal(self, signum, frame):
         """
         Handles shutdown signals to gracefully stop the consumer.
@@ -51,22 +72,26 @@ class SensorConsumer:
             signum (int): The signal number.
             frame (FrameType): The current stack frame.
         """
-        logging.info("Shutdown signal received. Closing consumer...")
+        self.logger.info("Shutdown signal received. Closing consumer...")
         self.shutdown_flag = True
 
-    def handle_lost_message(self, message):
+    def handle_lost_message(self, message, error=None):
         """
-        Handles lost Kafka messages by logging or storing them in a dead-letter queue.
+        Handles lost or invalid Kafka messages by logging them.
 
         Args:
-            message (dict): The lost message.
+            message (dict): The lost or invalid message.
+            error (str, optional): The error message if any. Defaults to None.
         """
         try:
-            logging.error(f"Lost message: {message}")
+            error_msg = f"Lost/invalid message: {message}"
+            if error:
+                error_msg += f" Error: {error}"
+            self.logger.error(error_msg)
             with open("lost_messages.log", "a") as f:
-                f.write(json.dumps(message) + "\n")
+                f.write(json.dumps({"message": message, "error": str(error)}) + "\n")
         except Exception as e:
-            logging.error(f"Failed to handle lost message: {e}")
+            self.logger.error(f"Failed to handle lost message: {e}")
 
     def consume_messages(self):
         """
@@ -78,19 +103,22 @@ class SensorConsumer:
                     break
 
                 if not message or not message.value:
-                    logging.warning("Received empty or invalid Kafka message, skipping.")
+                    self.logger.warning("Received empty or invalid Kafka message, skipping.")
                     continue
 
                 try:
-                    self.writer.process(message.value)
+                    if self.validate_message(message.value):
+                        self.writer.process(message.value)
+                    else:
+                        self.handle_lost_message(message.value, "Schema validation failed")
                 except Exception as e:
-                    logging.error(f"Error processing message: {e}")
-                    self.handle_lost_message(message.value)
+                    self.logger.error(f"Error processing message: {e}")
+                    self.handle_lost_message(message.value, str(e))
         except Exception as e:
-            logging.error(f"Unexpected error in consumer: {e}")
+            self.logger.error(f"Unexpected error in consumer: {e}")
         finally:
             self.consumer.close()
-            logging.info("Kafka consumer closed.")
+            self.logger.info("Kafka consumer closed.")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

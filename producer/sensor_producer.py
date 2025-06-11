@@ -5,6 +5,9 @@ from kafka import KafkaProducer
 from datetime import datetime
 from faker import Faker
 import os
+from jsonschema import validate, ValidationError
+from schemas.sensor_schema import TEMPERATURE_SENSOR_SCHEMA
+import logging
 
 class SensorProducer:
     """
@@ -30,6 +33,25 @@ class SensorProducer:
             bootstrap_servers=self.bootstrap_servers,
             value_serializer=lambda v: json.dumps(v).encode('utf-8')
         )
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+
+    def validate_sensor_data(self, data):
+        """
+        Validates sensor data against the schema.
+
+        Args:
+            data (dict): The sensor data to validate.
+
+        Returns:
+            bool: True if validation succeeds, False otherwise.
+        """
+        try:
+            validate(instance=data, schema=TEMPERATURE_SENSOR_SCHEMA)
+            return True
+        except ValidationError as e:
+            self.logger.error(f"Schema validation error: {e}")
+            return False
 
     def generate_temperature(self):
         """
@@ -39,7 +61,7 @@ class SensorProducer:
             dict: A dictionary containing sensor data.
         """
         fake = Faker()
-        return {
+        data = {
             "sensor_type": "temperature",
             "sensor_id": fake.uuid4(),
             "timestamp": datetime.utcnow().isoformat(),
@@ -52,6 +74,7 @@ class SensorProducer:
                 "longitude": float(round(fake.longitude(), 6))
             }
         }
+        return data
 
     def produce_messages(self, duration_seconds):
         """
@@ -63,8 +86,13 @@ class SensorProducer:
         start_time = time.time()
         while time.time() - start_time < duration_seconds:
             temperature_data = self.generate_temperature()
-            self.producer.send(self.topic, temperature_data)
-            print("Sent temperature:", temperature_data)
+            
+            if self.validate_sensor_data(temperature_data):
+                self.producer.send(self.topic, temperature_data)
+                self.logger.info(f"Sent temperature: {temperature_data}")
+            else:
+                self.logger.error(f"Invalid sensor data: {temperature_data}")
+            
             time.sleep(1)
 
         self.producer.flush()
