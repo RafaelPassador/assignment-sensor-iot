@@ -7,6 +7,14 @@ import signal
 import sys
 from jsonschema import validate, ValidationError
 from schemas.sensor_schema import TEMPERATURE_SENSOR_SCHEMA
+from monitoring.metrics import (
+    messages_consumed,
+    consumer_failures,
+    messages_consumed_per_minute,
+    validation_failures,
+    start_metrics_server
+)
+import time
 
 class SensorConsumer:
     """
@@ -36,6 +44,8 @@ class SensorConsumer:
         self.group_id = group_id
         self.writer = writer
         self.shutdown_flag = False
+        self.message_count = 0
+        self.last_minute = time.time()
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
 
@@ -46,6 +56,7 @@ class SensorConsumer:
             group_id=self.group_id,
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
+        start_metrics_server(8001)  # Porta diferente do producer
 
     def validate_message(self, message):
         """
@@ -104,16 +115,29 @@ class SensorConsumer:
 
                 if not message or not message.value:
                     self.logger.warning("Received empty or invalid Kafka message, skipping.")
+                    consumer_failures.inc()
                     continue
 
                 try:
                     if self.validate_message(message.value):
                         self.writer.process(message.value)
+                        messages_consumed.inc()
+                        self.message_count += 1
                     else:
+                        validation_failures.inc()
                         self.handle_lost_message(message.value, "Schema validation failed")
                 except Exception as e:
+                    consumer_failures.inc()
                     self.logger.error(f"Error processing message: {e}")
                     self.handle_lost_message(message.value, str(e))
+
+                # Atualiza métricas por minuto
+                current_time = time.time()
+                if current_time - self.last_minute >= 60:
+                    messages_consumed_per_minute.set(self.message_count)
+                    self.message_count = 0
+                    self.last_minute = current_time
+
         except Exception as e:
             self.logger.error(f"Unexpected error in consumer: {e}")
         finally:

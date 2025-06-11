@@ -8,6 +8,12 @@ import os
 from jsonschema import validate, ValidationError
 from schemas.sensor_schema import TEMPERATURE_SENSOR_SCHEMA
 import logging
+from monitoring.metrics import (
+    messages_produced,
+    producer_failures,
+    messages_produced_per_minute,
+    start_metrics_server
+)
 
 class SensorProducer:
     """
@@ -35,6 +41,9 @@ class SensorProducer:
         )
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
+        self.message_count = 0
+        self.last_minute = time.time()
+        start_metrics_server(8000)
 
     def validate_sensor_data(self, data):
         """
@@ -87,12 +96,26 @@ class SensorProducer:
         while time.time() - start_time < duration_seconds:
             temperature_data = self.generate_temperature()
             
-            if self.validate_sensor_data(temperature_data):
-                self.producer.send(self.topic, temperature_data)
-                self.logger.info(f"Sent temperature: {temperature_data}")
-            else:
-                self.logger.error(f"Invalid sensor data: {temperature_data}")
+            try:
+                if self.validate_sensor_data(temperature_data):
+                    self.producer.send(self.topic, temperature_data)
+                    messages_produced.inc()
+                    self.message_count += 1
+                    self.logger.info(f"Sent temperature: {temperature_data}")
+                else:
+                    producer_failures.inc()
+                    self.logger.error(f"Invalid sensor data: {temperature_data}")
+            except Exception as e:
+                producer_failures.inc()
+                self.logger.error(f"Error sending message: {e}")
             
+            # Atualiza métricas por minuto
+            current_time = time.time()
+            if current_time - self.last_minute >= 60:
+                messages_produced_per_minute.set(self.message_count)
+                self.message_count = 0
+                self.last_minute = current_time
+
             time.sleep(1)
 
         self.producer.flush()
