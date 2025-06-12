@@ -168,3 +168,7 @@ docker-compose logs sensor-consumer
 ### Retenção Kafka
 - Período: 7 dias
 - Tamanho máximo: 1GB
+
+## Autor 
+Rafael Passador
+Code Elevate Assignment - 2025
