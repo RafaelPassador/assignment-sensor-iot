@@ -2,7 +2,7 @@
 
 Sistema de streaming de dados IoT utilizando Apache Kafka, MongoDB, Prometheus e Grafana para ingestão, processamento e monitoramento de dados de sensores em tempo real.
 
-## 📋 Índice
+## Índice
 - [Arquitetura](#arquitetura)
 - [Pré-requisitos](#pré-requisitos)
 - [Instalação](#instalação)
@@ -13,7 +13,7 @@ Sistema de streaming de dados IoT utilizando Apache Kafka, MongoDB, Prometheus e
 - [API e Schemas](#api-e-schemas)
 - [Troubleshooting](#troubleshooting)
 
-## 🏗 Arquitetura
+## Arquitetura
 
 ```mermaid
 graph LR
@@ -33,13 +33,11 @@ graph LR
 - **Prometheus**: Coleta de métricas
 - **Grafana**: Visualização e monitoramento
 
-## 🛠 Pré-requisitos
+## Pré-requisitos
 - Docker
 - Docker Compose
-- 4GB RAM (mínimo)
-- 10GB espaço em disco
 
-## 📦 Instalação
+## Instalação
 
 1. Clone o repositório:
 ```powershell
@@ -52,7 +50,7 @@ cd assignment-sensor-iot
 docker-compose up --build
 ```
 
-## 🚀 Uso
+## Uso
 
 ### Iniciando o Sistema
 ```powershell
@@ -73,7 +71,7 @@ docker-compose logs sensor-producer
 docker-compose logs sensor-consumer
 ```
 
-## 📊 Monitoramento
+## Monitoramento
 
 ### Acessando os Dashboards
 - **Grafana**: http://localhost:3000
@@ -98,20 +96,14 @@ docker-compose logs sensor-consumer
 | sensor_messages_consumed_per_minute | Taxa de mensagens/minuto |
 | sensor_validation_failures_total | Falhas na validação de schema |
 
-## 🧪 Testes
+## Testes
 
 ### Executando Testes
 ```powershell
 docker exec -it assignment-sensor-iot-sensor-consumer-1 pytest
 ```
 
-### Cobertura de Testes
-- Testes de integração Kafka
-- Testes do MongoDB writer
-- Validação de schema
-- Métricas e monitoramento
-
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 ```
 .
 ├── consumer/           # Consumidor Kafka
@@ -123,7 +115,7 @@ docker exec -it assignment-sensor-iot-sensor-consumer-1 pytest
 └── grafana-provisioning/  # Dashboards e datasources
 ```
 
-## 📝 API e Schemas
+## Schemas
 
 ### Formato dos Dados do Sensor
 ```json
@@ -142,23 +134,6 @@ docker exec -it assignment-sensor-iot-sensor-consumer-1 pytest
 }
 ```
 
-## 🔧 Troubleshooting
-
-### Problemas Comuns
-
-1. **Kafka não inicia**
-   ```powershell
-   docker-compose restart kafka
-   ```
-
-2. **MongoDB não conecta**
-   - Verifique as credenciais
-   - Confirme a URI de conexão
-
-3. **Métricas não aparecem**
-   - Verifique portas: 8000 (producer) e 8001 (consumer)
-   - Confirme acesso ao Prometheus (9090)
-
 ### Logs e Diagnóstico
 ```powershell
 # Ver todos os logs
@@ -169,7 +144,7 @@ docker-compose logs sensor-producer
 docker-compose logs sensor-consumer
 ```
 
-## 🔐 Configurações
+## Configurações
 
 ### Variáveis de Ambiente
 - `KAFKA_TOPIC`: Tópico Kafka (default: sensores)
@@ -179,8 +154,3 @@ docker-compose logs sensor-consumer
 ### Retenção Kafka
 - Período: 7 dias
 - Tamanho máximo: 1GB
-
-## 📈 Métricas de Performance
-- Taxa de processamento: ~60 mensagens/minuto
-- Latência média: <100ms
-- Uso de memória: ~256MB por serviço

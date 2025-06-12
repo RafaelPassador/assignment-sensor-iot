@@ -7,12 +7,12 @@ import signal
 import sys
 from jsonschema import validate, ValidationError
 from schemas.sensor_schema import TEMPERATURE_SENSOR_SCHEMA
-from monitoring.metrics import (
+from monitoring.consumer_metrics import (
     messages_consumed,
     consumer_failures,
     messages_consumed_per_minute,
     validation_failures,
-    start_metrics_server
+    start_consumer_metrics_server
 )
 import time
 
@@ -57,7 +57,7 @@ class SensorConsumer:
             group_id=self.group_id,
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
-        start_metrics_server(8001)  # Porta diferente do producer
+        start_consumer_metrics_server(8001)  # Porta diferente do producer
 
     def validate_message(self, message):
         """

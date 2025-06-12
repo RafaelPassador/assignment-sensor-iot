@@ -56,7 +56,8 @@
       "pluginVersion": "7.1.3",
       "pointradius": 2,
       "points": false,
-      "renderer": "flot",      "seriesOverrides": [],
+      "renderer": "flot",
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -91,7 +92,8 @@
         "name": null,
         "show": true,
         "values": []
-      },      "yaxes": [
+      },
+      "yaxes": [
         {
           "format": "short",
           "label": "Mensagens/min",
@@ -152,7 +154,8 @@
       "pluginVersion": "7.1.3",
       "pointradius": 2,
       "points": false,
-      "renderer": "flot",      "seriesOverrides": [],
+      "renderer": "flot",
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -193,7 +196,8 @@
         "name": null,
         "show": true,
         "values": []
-      },      "yaxes": [
+      },
+      "yaxes": [
         {
           "format": "short",
           "label": "Número de Falhas",

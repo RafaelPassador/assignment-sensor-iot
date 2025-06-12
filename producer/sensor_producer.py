@@ -8,11 +8,11 @@ import os
 from jsonschema import validate, ValidationError
 from schemas.sensor_schema import TEMPERATURE_SENSOR_SCHEMA
 import logging
-from monitoring.metrics import (
+from monitoring.producer_metrics import (
     messages_produced,
     producer_failures,
     messages_produced_per_minute,
-    start_metrics_server
+    start_producer_metrics_server
 )
 
 class SensorProducer:
@@ -44,7 +44,7 @@ class SensorProducer:
         self.message_count = 0
         self.last_minute = time.time()
         self.messages_in_current_minute = 0
-        start_metrics_server(8000)
+        start_producer_metrics_server(8000)
 
     def validate_sensor_data(self, data):
         """
@@ -128,4 +128,5 @@ if __name__ == "__main__":
     KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
 
     producer = SensorProducer(KAFKA_TOPIC, KAFKA_BOOTSTRAP_SERVERS)
+    #produz dados fake por 180s para simular o envio de mensagens
     producer.produce_messages(duration_seconds=180)
