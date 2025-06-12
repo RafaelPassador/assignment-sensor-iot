@@ -1,6 +1,21 @@
-# IoT Kafka MongoDB Pipeline
+# Code Assignment - Monitoramento de Sensores IoT
 
-Sistema de streaming de dados IoT utilizando Apache Kafka, MongoDB, Prometheus e Grafana para ingestão, processamento e monitoramento de dados de sensores em tempo real.
+
+Você precisa criar um sistema de monitoramento de sensores IoT que envia dados de sensores em tempo real para um tópico Kafka (producer) e consome esses dados para processamento e armazenamento (consumer).
+
+---
+
+## 1. Criar o Producer
+
+- Desenvolver um script em Python (ou outra linguagem de sua escolha) que gera dados falsos de sensores IoT e envia esses dados para um tópico Kafka.  
+- Utilizar uma biblioteca como `faker` para gerar dados falsos.
+
+---
+
+## 2. Criar o Consumer
+
+- Desenvolver um script que consome os dados do tópico Kafka e processa esses dados.  
+- Armazenar os dados consumidos em um banco de dados.
 
 ## Índice
 - [Arquitetura](#arquitetura)
@@ -10,8 +25,7 @@ Sistema de streaming de dados IoT utilizando Apache Kafka, MongoDB, Prometheus e
 - [Monitoramento](#monitoramento)
 - [Testes](#testes)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [API e Schemas](#api-e-schemas)
-- [Troubleshooting](#troubleshooting)
+- [Schemas](#api-e-schemas)
 
 ## Arquitetura
 
