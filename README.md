@@ -165,10 +165,23 @@ docker-compose logs sensor-consumer
 - `KAFKA_BOOTSTRAP_SERVERS`: Endereço Kafka (default: kafka:9092)
 - `MONGODB_URI`: URI MongoDB (default: mongodb://mongodb:27017)
 
+### Exemplo de Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+
+```
+KAFKA_BROKER=localhost:9092
+KAFKA_TOPIC=sensor-data
+DATABASE_URL=postgresql://user:password@localhost:5432/sensor_db
+PROMETHEUS_PORT=9090
+GRAFANA_PORT=3000
+```
+
 ### Retenção Kafka
 - Período: 7 dias
 - Tamanho máximo: 1GB
 
 ## Autor 
-Rafael Passador
+
+**Rafael Passador**  
 Code Elevate Assignment - 2025
